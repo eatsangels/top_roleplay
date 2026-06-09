@@ -413,11 +413,11 @@ with seed(section_key, key, content_type, title, subtitle, body, href, media_url
   ('parallax_chapters', 'capitulo_ii', 'chapter', 'Elige quién quieres ser. La comunidad recordará lo que hagas.', 'TOP ROLEPLAY · Capítulo II', null, null, null, null, 'Skull', 20, '{}'::jsonb),
   ('parallax_chapters', 'capitulo_iii', 'chapter', 'Tu reputación se gana jugando. Tu nombre llega al TOP creando historia.', 'TOP ROLEPLAY · Capítulo III', null, null, null, null, 'Swords', 30, '{}'::jsonb),
   ('parallax_chapters', 'capitulo_iv', 'chapter', 'Deja de mirar la historia desde fuera. Entra y protagonízala.', 'TOP ROLEPLAY · Capítulo IV', null, null, null, null, 'Compass', 40, '{}'::jsonb),
-  ('ranking_public', 'aureliostorm', 'ranking_snapshot', 'AurelioStorm', 'Red Kraken', null, null, null, null, null, 10, '{"level":95,"points":"98.410","online":true}'::jsonb),
-  ('ranking_public', 'mikaeldmar', 'ranking_snapshot', 'MikaelDMar', 'Corsarios', null, null, null, null, null, 20, '{"level":92,"points":"91.220","online":true}'::jsonb),
-  ('ranking_public', 'namivalkyr', 'ranking_snapshot', 'NamiValkyr', 'Marea Roja', null, null, null, null, null, 30, '{"level":90,"points":"87.630","online":false}'::jsonb),
-  ('ranking_public', 'blackrune', 'ranking_snapshot', 'BlackRune', 'Nocturnos', null, null, null, null, null, 40, '{"level":88,"points":"81.940","online":true}'::jsonb),
-  ('ranking_public', 'capitanalyra', 'ranking_snapshot', 'CapitanaLyra', 'Ala Dorada', null, null, null, null, null, 50, '{"level":86,"points":"79.505","online":false}'::jsonb),
+  ('ranking_public', 'aureliostorm', 'ranking_snapshot', 'AurelioStorm', 'Argent Police Force', null, null, null, null, null, 10, '{"level":"Comandante","points":"98.410","online":true}'::jsonb),
+  ('ranking_public', 'mikaeldmar', 'ranking_snapshot', 'MikaelDMar', 'Sea Shadow Syndicate', null, null, null, null, null, 20, '{"level":"Mano Derecha","points":"91.220","online":true}'::jsonb),
+  ('ranking_public', 'namivalkyr', 'ranking_snapshot', 'NamiValkyr', 'Abyssal Reavers', null, null, null, null, null, 30, '{"level":"Jefe de Zona","points":"87.630","online":false}'::jsonb),
+  ('ranking_public', 'blackrune', 'ranking_snapshot', 'BlackRune', 'Crimson Tide Outlaws', null, null, null, null, null, 40, '{"level":"Lider","points":"81.940","online":true}'::jsonb),
+  ('ranking_public', 'capitanalyra', 'ranking_snapshot', 'CapitanaLyra', 'Iron Skull Brotherhood', null, null, null, null, null, 50, '{"level":"Encargado","points":"79.505","online":false}'::jsonb),
   ('downloads_public', 'download_copy', 'text', 'Entra a TOP ROLEPLAY', null, 'Descarga el cliente oficial, crea tu cuenta y comienza a construir una identidad que la comunidad recuerde.', null, null, null, 'Download', 10, '{}'::jsonb),
   ('downloads_public', 'req_windows', 'requirement', 'Windows 10/11', null, null, null, null, null, null, 20, '{}'::jsonb),
   ('downloads_public', 'req_ram', 'requirement', '4GB RAM mínimo', null, null, null, null, null, null, 30, '{}'::jsonb),
@@ -514,11 +514,11 @@ insert into public.rankings (ranking_type, points, is_featured, is_visible, disp
 select *
 from (
   values
-    ('general', 98410, true, true, 'AurelioStorm', '{"level":95,"clan":"Red Kraken","online":true}'::jsonb),
-    ('general', 91220, true, true, 'MikaelDMar', '{"level":92,"clan":"Corsarios","online":true}'::jsonb),
-    ('general', 87630, true, true, 'NamiValkyr', '{"level":90,"clan":"Marea Roja","online":false}'::jsonb),
-    ('general', 81940, false, true, 'BlackRune', '{"level":88,"clan":"Nocturnos","online":true}'::jsonb),
-    ('general', 79505, false, true, 'CapitanaLyra', '{"level":86,"clan":"Ala Dorada","online":false}'::jsonb)
+    ('general', 98410, true, true, 'AurelioStorm', '{"level":"Comandante","clan":"Argent Police Force","online":true}'::jsonb),
+    ('general', 91220, true, true, 'MikaelDMar', '{"level":"Mano Derecha","clan":"Sea Shadow Syndicate","online":true}'::jsonb),
+    ('general', 87630, true, true, 'NamiValkyr', '{"level":"Jefe de Zona","clan":"Abyssal Reavers","online":false}'::jsonb),
+    ('general', 81940, false, true, 'BlackRune', '{"level":"Lider","clan":"Crimson Tide Outlaws","online":true}'::jsonb),
+    ('general', 79505, false, true, 'CapitanaLyra', '{"level":"Encargado","clan":"Iron Skull Brotherhood","online":false}'::jsonb)
 ) as seed(ranking_type, points, is_featured, is_visible, display_name, display_details)
 where not exists (
   select 1 from public.rankings existing

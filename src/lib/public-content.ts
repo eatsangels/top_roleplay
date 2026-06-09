@@ -204,6 +204,7 @@ const fallbackEditorialContent: PublicEditorialContent = {
     { label: "Ciudad", href: "#mundo" },
     { label: "Conflicto", href: "#sistemas" },
     { label: "Ranking", href: "/ranking" },
+    { label: "Buscados", href: "/buscados" },
     { label: "Operaciones", href: "#eventos" },
     { label: "Jugar", href: "#descargas" },
     { label: "Comunidad", href: "#comunidad" },
@@ -256,11 +257,11 @@ const fallbackEditorialContent: PublicEditorialContent = {
     text: "Mejor policía, criminal más buscado, banda dominante y figuras clave de la temporada.",
   },
   ranking: [
-    { id: "fallback-ranking-1", name: "AurelioVega", level: "Comandante", clan: "Policía Metropolitana", points: "98.410", online: true },
-    { id: "fallback-ranking-2", name: "MikaelRojas", level: "Más buscado", clan: "Banda Roja", points: "91.220", online: true },
-    { id: "fallback-ranking-3", name: "NadiaCruz", level: "Operadora", clan: "Informantes", points: "87.630", online: false },
-    { id: "fallback-ranking-4", name: "BrunoNorte", level: "Jefe de zona", clan: "Banda Azul", points: "81.940", online: true },
-    { id: "fallback-ranking-5", name: "LuciaMora", level: "Civil influyente", clan: "Comerciantes", points: "79.505", online: false },
+    { id: "fallback-ranking-1", name: "AurelioVega", level: "Comandante", clan: "Argent Police Force", points: "98.410", online: true },
+    { id: "fallback-ranking-2", name: "MikaelRojas", level: "Mano Derecha", clan: "Sea Shadow Syndicate", points: "91.220", online: true },
+    { id: "fallback-ranking-3", name: "NadiaCruz", level: "Jefe de Zona", clan: "Abyssal Reavers", points: "87.630", online: false },
+    { id: "fallback-ranking-4", name: "BrunoNorte", level: "Lider", clan: "Crimson Tide Outlaws", points: "81.940", online: true },
+    { id: "fallback-ranking-5", name: "LuciaMora", level: "Encargado", clan: "Iron Skull Brotherhood", points: "79.505", online: false },
   ],
   eventsSection: {
     eyebrow: "Centro de operaciones",
@@ -530,6 +531,38 @@ function parseRanking(value: unknown): PublicRankingItem[] {
   }).slice(0, 10);
 }
 
+// Nombres de rango reales del juego (faction_system.lua POLICE_RANKS / GANG_RANKS).
+const POLICE_RANK_NAMES = ["Recluta", "Oficial", "Cabo", "Sargento", "Teniente", "Capitan", "Comandante"];
+const GANG_RANK_NAMES = ["Novato", "Mensajero", "Sicario", "Encargado", "Jefe de Zona", "Mano Derecha", "Lider"];
+
+function liveRankName(faction: number, rank: number): string {
+  if (faction === 1) return POLICE_RANK_NAMES[rank] ?? "Recluta";
+  if (faction >= 2 && faction <= 5) return GANG_RANK_NAMES[rank] ?? "Novato";
+  return "Ciudadano";
+}
+
+// Ranking REAL desde live_characters (puente SQL Server): top por reputacion.
+function liveCharacterRanking(value: unknown): PublicRankingItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item, index) => {
+    const character = objectValue(item);
+    if (!character) return [];
+    const name = nonEmptyString(character.cha_name, "");
+    if (!name) return [];
+    const faction = Number(character.faction ?? 0);
+    const rank = Number(character.faction_rank ?? 0);
+    const rep = Number(character.reputation_points ?? 0);
+    return [{
+      id: `live-char-${character.cha_id ?? index + 1}`,
+      name,
+      level: liveRankName(faction, rank),
+      clan: nonEmptyString(character.faction_name, "Civil"),
+      points: (Number.isFinite(rep) ? rep : 0).toLocaleString("es-ES"),
+      online: false,
+    }];
+  }).slice(0, 5);
+}
+
 function parseGallery(value: unknown): PublicGalleryItem[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item, index) => {
@@ -740,13 +773,14 @@ export async function getPublicContent(): Promise<PublicContent> {
   try {
     const supabase = await createSupabaseServerClient();
     const now = new Date().toISOString();
-    const [newsResult, eventsResult, settingsResult, rankingsResult, galleryResult, pageContentResult] = await Promise.all([
+    const [newsResult, eventsResult, settingsResult, rankingsResult, galleryResult, pageContentResult, liveCharsResult] = await Promise.all([
       supabase.from("news").select("id,title,category,summary,published_at").eq("status", "publicado").lte("published_at", now).order("published_at", { ascending: false }).limit(3),
       supabase.from("events").select("id,name,rewards,starts_at").in("status", ["activo", "destacado"]).or(`ends_at.is.null,ends_at.gte.${now}`).order("is_featured", { ascending: false }).order("starts_at", { ascending: true }).limit(4),
       supabase.from("site_settings").select("key,value").in("key", ["public_config", "public_metrics", "public_content"]),
       supabase.from("rankings").select("id,ranking_type,points,is_featured,players(username),guilds(name)").eq("is_visible", true).order("is_featured", { ascending: false }).order("points", { ascending: false }).limit(5),
       supabase.from("gallery").select("id,title,description,image_url,category,is_featured,sort_order").eq("is_active", true).order("is_featured", { ascending: false }).order("sort_order", { ascending: true }).limit(12),
       supabase.from("public_page_content").select("*"),
+      supabase.from("live_characters").select("cha_id,cha_name,faction,faction_name,faction_rank,reputation_points").order("reputation_points", { ascending: false }).limit(5),
     ]);
 
     const news = newsResult.error || !newsResult.data?.length
@@ -777,14 +811,23 @@ export async function getPublicContent(): Promise<PublicContent> {
       galleryResult.error ? [] : tableGalleryItems(galleryResult.data),
     );
 
-    // Garantiza el enlace al ranking en vivo aunque el nav venga del CMS.
-    const navItems = editorial.navItems.some((item) => item.href === "/ranking")
+    // Ranking REAL del juego (live_characters via puente SQL Server) tiene prioridad
+    // sobre CMS/tabla editorial/fallback en la seccion de ranking de la landing.
+    const liveRanking = liveCharsResult.error ? [] : liveCharacterRanking(liveCharsResult.data);
+
+    // Garantiza los enlaces en vivo (ranking + buscados) aunque el nav venga del CMS.
+    const withRanking = editorial.navItems.some((item) => item.href === "/ranking")
       ? editorial.navItems
       : [...editorial.navItems.slice(0, 3), { label: "Ranking", href: "/ranking" }, ...editorial.navItems.slice(3)];
+    const rankingIndex = withRanking.findIndex((item) => item.href === "/ranking");
+    const navItems = withRanking.some((item) => item.href === "/buscados")
+      ? withRanking
+      : [...withRanking.slice(0, rankingIndex + 1), { label: "Buscados", href: "/buscados" }, ...withRanking.slice(rankingIndex + 1)];
 
     return {
       ...editorial,
       navItems,
+      ranking: liveRanking.length ? liveRanking : editorial.ranking,
       communityCta: {
         ...editorial.communityCta,
         buttonHref: editorial.communityCta.buttonHref === fallbackConfig.discordUrl ? config.discordUrl : editorial.communityCta.buttonHref,
