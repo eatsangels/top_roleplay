@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Coins, Crown, Flame, Gem, Medal, Shield, ShieldHalf, Sparkles, Star, Trophy } from "lucide-react";
 
 import type { Metadata } from "next";
@@ -93,6 +94,20 @@ const CATS: CatTheme[] = [
   },
 ];
 
+const champImages: Record<string, string> = {
+  a: "/visuals/top/Renders/Characters/Characters (47).png", // Policía
+  k: "/visuals/top/Renders/Characters/Characters (16).png", // Banda Roja
+  s: "/visuals/top/Renders/Characters/Characters (21).png", // Transportista
+  r: "/visuals/top/Renders/Characters/Characters (65).png", // Civil
+};
+
+const catBgs: Record<string, string> = {
+  a: "/visuals/top/Scenes/Scene (3).png",
+  k: "/visuals/top/Wallpapers/Wallpapers (19).jpg",
+  s: "/visuals/top/Wallpapers/Wallpapers (32).jpg",
+  r: "/visuals/top/Panorama/Panorama (5).jpg",
+};
+
 const numberFormat = new Intl.NumberFormat("es-ES");
 
 async function getLiveRanking() {
@@ -166,9 +181,18 @@ function rankStyle(rank: number) {
 function BoardCard({ cat, entries }: { cat: CatTheme; entries: LiveRow[] }) {
   const Icon = cat.icon;
   return (
-    <div className="neon-border city-panel district-glow relative overflow-hidden rounded-3xl p-6 transition duration-300 hover:-translate-y-1 hover:border-white/15">
+    <div className="neon-border city-panel district-glow relative overflow-hidden rounded-3xl p-6 transition duration-300 hover:-translate-y-1 hover:border-white/15 group">
+      {/* Background category image */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] transition duration-500 group-hover:opacity-[0.07]">
+        <Image
+          src={catBgs[cat.key] || "/visuals/top/Panorama/Panorama (5).jpg"}
+          alt=""
+          fill
+          className="object-cover filter grayscale"
+        />
+      </div>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: cat.glow }} />
-      <div className="relative">
+      <div className="relative z-10">
         <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-black/50">
             <Icon aria-hidden="true" className={`${cat.accent} ${cat.iconGlow}`} size={20} />
@@ -246,6 +270,29 @@ export default async function RankingPage() {
       {/* Backdrop layers mirroring the landing */}
       <div aria-hidden="true" className="city-grid pointer-events-none fixed inset-0 z-0 opacity-70" />
       <div aria-hidden="true" className="smoke-texture pointer-events-none fixed inset-0 z-0 opacity-60" />
+
+      {/* Background themed banner with video */}
+      <div className="absolute left-1/2 top-0 h-[28rem] w-[120%] -translate-x-1/2 pointer-events-none overflow-hidden opacity-25 select-none z-0">
+        <Image
+          src="/visuals/top/Panorama/Panorama (3).jpg"
+          alt="TOP ROLEPLAY Ciudad"
+          fill
+          className="object-cover"
+          priority
+        />
+        <video
+          autoPlay
+          className="absolute inset-0 h-full w-full object-cover"
+          loop
+          muted
+          playsInline
+          poster="/visuals/top/Panorama/Panorama (3).jpg"
+          preload="auto"
+        >
+          <source src="/Hero_Ranking.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-abyss/70 to-abyss" />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         {/* Hero */}
@@ -353,12 +400,21 @@ export default async function RankingPage() {
                       className="neon-border city-panel district-glow group relative overflow-hidden rounded-3xl p-6 text-center transition duration-300 hover:-translate-y-1 hover:border-gold-300/30"
                       key={champ.category}
                     >
+                      {/* Character render background */}
+                      <div className="absolute -bottom-2 -right-4 pointer-events-none h-28 w-24 opacity-[0.18] transition duration-500 group-hover:scale-105 group-hover:opacity-[0.28]">
+                        <Image
+                          src={champImages[champ.category] || "/visuals/top/Renders/Characters/Characters (65).png"}
+                          alt=""
+                          fill
+                          className="object-contain object-bottom"
+                        />
+                      </div>
                       <div
                         aria-hidden="true"
                         className="pointer-events-none absolute inset-0"
                         style={{ background: "radial-gradient(circle at 50% 0%, rgba(255,215,0,0.18), transparent 62%)" }}
                       />
-                      <div className="relative">
+                      <div className="relative z-10">
                         <span className="relative mx-auto mb-4 grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-gold-300/30 bg-black/50">
                           <span aria-hidden="true" className="tr-shimmer pointer-events-none absolute inset-0" />
                           <Crown aria-hidden="true" className="relative text-gold-300 drop-shadow-[0_0_12px_rgba(255,215,0,0.6)] transition duration-300 group-hover:scale-110" size={26} />
