@@ -1,0 +1,10 @@
+TOP ROLEPLAY - Cliente Oficial
+
+Este archivo es un marcador descargable para la web.
+Sustituye este archivo por el instalador real del cliente cuando esté disponible.
+
+Requisitos mínimos:
+- Windows 10/11
+- 4GB RAM mínimo
+- 2GB espacio disponible
+- Conexión a internet estable

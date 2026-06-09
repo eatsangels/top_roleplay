@@ -1,0 +1,9 @@
+TOP ROLEPLAY - Guía de Instalación
+
+1. Descarga el cliente oficial desde la web.
+2. Extrae o ejecuta el instalador en una carpeta con permisos de escritura.
+3. Abre el launcher de TOP ROLEPLAY.
+4. Crea tu cuenta desde el panel oficial o Discord.
+5. Inicia sesión y entra al servidor.
+
+Si tienes problemas, entra al Discord oficial y abre un ticket de soporte.

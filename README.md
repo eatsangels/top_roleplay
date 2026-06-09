@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TOP ROLEPLAY
 
-## Getting Started
+Portal web y panel de administración para **TOP ROLEPLAY: Cops vs Gangs**, una ciudad persistente donde policías, bandas y civiles disputan territorios, reputación y poder.
 
-First, run the development server:
+La visión funcional del juego está documentada en [LoQueQuiero.md](./LoQueQuiero.md). La web presenta esa temática, muestra el estado público de la comunidad y permite administrar su contenido desde Supabase.
+
+## Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Para una instalación nueva, ejecuta los archivos SQL desde el editor de Supabase en este orden:
 
-## Learn More
+1. `supabase/top-roleplay-schema.sql`
+2. `supabase/role-panels-security-migration.sql`
+3. `supabase/sanctions-module-migration.sql`
+4. `supabase/public-full-cms-migration.sql`
+5. `supabase/cops-vs-gangs-theme-migration.sql`
 
-To learn more about Next.js, take a look at the following resources:
+La última migración adapta el contenido administrable a la temática final de Policía, Bandas, Civiles y Guerra de Territorios. Es idempotente y puede aplicarse nuevamente.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Si el proyecto ya tiene `top-roleplay-schema.sql` aplicado pero todavía no existen
+`public.public_sections` o `public.public_content`, ejecuta solamente:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. `supabase/public-full-cms-migration.sql`
+2. `supabase/cops-vs-gangs-theme-migration.sql`
 
-## Deploy on Vercel
+No vuelvas a ejecutar el esquema base en una base de datos existente, porque contiene
+creaciones iniciales que no son idempotentes.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Validación
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+```
