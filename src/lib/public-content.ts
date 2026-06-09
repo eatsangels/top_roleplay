@@ -279,7 +279,7 @@ const fallbackEditorialContent: PublicEditorialContent = {
     title: "Mira el tráiler",
     text: "Una pieza breve para establecer tono, escudo y energía visual antes de entrar al juego.",
     videoUrl: "/Logo_reveal_animation_TOP_ROLEPLAY_202606061133.mp4",
-    posterUrl: "/visuals/trailer-poster.svg",
+    posterUrl: "/visuals/top/Scenes/Scene (5).png",
   },
   gallerySection: {
     eyebrow: "Galería",
@@ -287,12 +287,12 @@ const fallbackEditorialContent: PublicEditorialContent = {
     text: "Territorios, redadas, bandas, patrullas y momentos decisivos de la comunidad.",
   },
   gallery: [
-    { title: "Centro de la Ciudad", imageUrl: "/visuals/gallery-city-center.svg" },
-    { title: "Territorios", imageUrl: "/visuals/gallery-territories.svg" },
-    { title: "Redadas", imageUrl: "/visuals/gallery-raid.svg" },
-    { title: "Bandas", imageUrl: "/visuals/gallery-gangs.svg" },
-    { title: "Policía", imageUrl: "/visuals/gallery-police.svg" },
-    { title: "Mercado Negro", imageUrl: "/visuals/gallery-black-market.svg" },
+    { title: "Centro de la Ciudad", imageUrl: "/visuals/top/Panorama/Panorama (5).jpg" },
+    { title: "Territorios", imageUrl: "/visuals/top/Scenes/Scene (2).png" },
+    { title: "Redadas", imageUrl: "/visuals/top/Scenes/Scene (5).png" },
+    { title: "Bandas", imageUrl: "/visuals/top/Wallpapers/Wallpapers (19).jpg" },
+    { title: "Policía", imageUrl: "/visuals/top/2012_Update/NWS_4.png" },
+    { title: "Mercado Negro", imageUrl: "/visuals/top/Wallpapers/Wallpapers (32).jpg" },
   ].map(({ title, imageUrl }, index) => ({
     id: `fallback-gallery-${index + 1}`,
     title,
@@ -372,21 +372,21 @@ const eventDateFormatter = new Intl.DateTimeFormat("es-ES", {
 const visualIcons: PublicVisualIcon[] = ["anchor", "book", "calendar", "compass", "crown", "download", "gamepad", "gem", "map", "message", "scroll", "shield", "skull", "sparkles", "swords", "trophy", "users", "zap"];
 const metricIconNames: PublicMetricIcon[] = ["users", "online", "guilds", "events", "history"];
 const fallbackGalleryImages = [
-  "/visuals/gallery-city-center.svg",
-  "/visuals/gallery-territories.svg",
-  "/visuals/gallery-raid.svg",
-  "/visuals/gallery-gangs.svg",
-  "/visuals/gallery-police.svg",
-  "/visuals/gallery-black-market.svg",
+  "/visuals/top/Panorama/Panorama (5).jpg",
+  "/visuals/top/Scenes/Scene (2).png",
+  "/visuals/top/Scenes/Scene (5).png",
+  "/visuals/top/Wallpapers/Wallpapers (19).jpg",
+  "/visuals/top/2012_Update/NWS_4.png",
+  "/visuals/top/Wallpapers/Wallpapers (32).jpg",
 ];
 
 function fallbackGalleryImage(title: string, index: number) {
   const normalized = title.toLowerCase();
-  if (normalized.includes("territorio")) return "/visuals/gallery-territories.svg";
-  if (normalized.includes("redada") || normalized.includes("operacion") || normalized.includes("operación")) return "/visuals/gallery-raid.svg";
-  if (normalized.includes("banda") || normalized.includes("criminal")) return "/visuals/gallery-gangs.svg";
-  if (normalized.includes("polic")) return "/visuals/gallery-police.svg";
-  if (normalized.includes("mercado") || normalized.includes("contrabando")) return "/visuals/gallery-black-market.svg";
+  if (normalized.includes("territorio")) return "/visuals/top/Scenes/Scene (2).png";
+  if (normalized.includes("redada") || normalized.includes("operacion") || normalized.includes("operación")) return "/visuals/top/Scenes/Scene (5).png";
+  if (normalized.includes("banda") || normalized.includes("criminal")) return "/visuals/top/Wallpapers/Wallpapers (19).jpg";
+  if (normalized.includes("polic")) return "/visuals/top/2012_Update/NWS_4.png";
+  if (normalized.includes("mercado") || normalized.includes("contrabando")) return "/visuals/top/Wallpapers/Wallpapers (32).jpg";
   return fallbackGalleryImages[index % fallbackGalleryImages.length];
 }
 

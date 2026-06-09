@@ -69,6 +69,14 @@ const visualIcons: Record<PublicVisualIcon, React.ElementType> = {
 };
 
 const pathIcons = [Shield, Skull, Swords, Users, MessageCircle, Map];
+const pathRenders = [
+  "/visuals/top/Renders/Characters/Characters (47).png", // Policía
+  "/visuals/top/Renders/Characters/Characters (16).png", // Banda Roja
+  "/visuals/top/Renders/Characters/Characters (76).png", // Banda Azul
+  "/visuals/top/Renders/Characters/Characters (65).png", // Civil y Comerciante
+  "/visuals/top/Renders/Characters/Characters (17).png", // Informante
+  "/visuals/top/Renders/Characters/Characters (21).png", // Transportista
+];
 const eventIcons = [MapPin, Crosshair, Radio, Shield];
 
 function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -301,7 +309,7 @@ function Hero({ config }: { config: PublicConfig }) {
         className="absolute -inset-x-8 -inset-y-16"
         style={reduceMotion ? undefined : { scale: backgroundScale, y: backgroundY }}
       >
-        <Image alt="" className="object-cover opacity-50" fill priority sizes="100vw" src="/visuals/hero-city.svg" />
+        <Image alt="" className="object-cover opacity-50" fill priority sizes="100vw" src="/visuals/top/Panorama/Panorama.jpg" />
         {reduceMotion ? null : (
           <video
             autoPlay
@@ -309,7 +317,7 @@ function Hero({ config }: { config: PublicConfig }) {
             loop
             muted
             playsInline
-            poster="/visuals/trailer-poster.svg"
+            poster="/visuals/top/Panorama/Panorama.jpg"
             preload="none"
           >
             <source media="(min-width: 768px)" src="/Logo_reveal_animation_TOP_ROLEPLAY_202606061133.mp4" type="video/mp4" />
@@ -478,7 +486,7 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
           <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
             <Reveal>
               <Card className="relative min-h-96 overflow-hidden p-8">
-                <div className="absolute inset-0 bg-[url('/visuals/gallery-territories.svg')] bg-cover bg-center opacity-60" />
+                <div className="absolute inset-0 bg-[url('/visuals/top/Scenes/Scene (2).png')] bg-cover bg-center opacity-60" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(255,215,0,0.18),transparent_18rem),linear-gradient(135deg,rgba(58,0,8,0.72),rgba(0,0,0,0.88),rgba(0,229,255,0.12))]" />
                 <div className="relative flex h-80 flex-col justify-between rounded-2xl border border-gold-300/20 bg-black/25 p-6 backdrop-blur-[1px]">
                   <Map aria-hidden="true" className="text-gold-300" size={44} />
@@ -542,11 +550,26 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
 
               return (
                 <Reveal key={path.title}>
-                  <Card className="relative h-full overflow-hidden p-7">
+                  <Card className="group relative h-full overflow-hidden p-7 transition hover:-translate-y-1 hover:border-gold-300/30 hover:shadow-[0_0_24px_rgba(255,215,0,0.06)]">
                     <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-cyan-magic/10 blur-2xl" />
-                    <PathIcon aria-hidden="true" className={cn("mb-5", index % 2 ? "text-cyan-magic" : "text-gold-300")} size={34} />
-                    <h3 className="font-fantasy text-2xl font-black text-white">{path.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-neutral-400">{path.description}</p>
+                    <div className="relative z-10 flex h-full flex-col justify-between">
+                      <div>
+                        <PathIcon aria-hidden="true" className={cn("mb-5", index % 2 ? "text-cyan-magic" : "text-gold-300")} size={34} />
+                        <h3 className="font-fantasy text-2xl font-black text-white">{path.title}</h3>
+                        <p className="mt-3 text-sm leading-7 text-neutral-400 max-w-[72%]">{path.description}</p>
+                      </div>
+                    </div>
+                    {pathRenders[index] && (
+                      <div className="pointer-events-none absolute bottom-0 right-0 h-44 w-32 select-none opacity-28 transition-all duration-500 group-hover:scale-108 group-hover:opacity-50">
+                        <Image
+                          alt=""
+                          className="object-contain object-bottom-right"
+                          fill
+                          sizes="128px"
+                          src={pathRenders[index]}
+                        />
+                      </div>
+                    )}
                   </Card>
                 </Reveal>
               );
