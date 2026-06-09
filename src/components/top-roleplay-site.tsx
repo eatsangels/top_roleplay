@@ -352,6 +352,41 @@ function Hero({ config }: { config: PublicConfig }) {
   const emblemY = useTransform(scrollYProgress, [0, 1], ["0%", "38%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.78], [1, 0]);
 
+  const [activeFaction, setActiveFaction] = useState<'policia' | 'bandas' | 'civiles'>('policia');
+
+  const factionDetails = {
+    policia: {
+      title: "Policía de Élite",
+      control: "42%",
+      status: "Defendiendo",
+      statusColor: "text-cyan-magic border-cyan-magic/30",
+      glowColor: "rgba(0, 229, 255, 0.2)",
+      districts: "Comisaría Central, Muelles y Centro Financiero",
+      accent: "text-cyan-magic",
+      borderColor: "border-cyan-magic/50",
+    },
+    bandas: {
+      title: "Bandas & Mafias",
+      control: "38%",
+      status: "En Conflicto",
+      statusColor: "text-red-300 border-red-400/30",
+      glowColor: "rgba(176, 0, 32, 0.25)",
+      districts: "Barrios Bajos, Callejón de Armas y Almacén Viejo",
+      accent: "text-red-300",
+      borderColor: "border-red-400/50",
+    },
+    civiles: {
+      title: "Civiles y Comerciantes",
+      control: "20%",
+      status: "Produciendo",
+      statusColor: "text-gold-300 border-gold-300/30",
+      glowColor: "rgba(255, 215, 0, 0.18)",
+      districts: "Zona Residencial, Mercado Central y Banco Nacional",
+      accent: "text-gold-300",
+      borderColor: "border-gold-300/50",
+    },
+  };
+
   return (
     <section ref={target} className="relative flex min-h-screen items-center overflow-hidden px-4 pb-20 pt-32 sm:px-6 lg:px-8" id="inicio">
       <motion.div
@@ -437,36 +472,129 @@ function Hero({ config }: { config: PublicConfig }) {
                 <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-magic">Centro de operaciones</p>
                 <p className="mt-1 font-fantasy text-xl font-black text-white">Control territorial</p>
               </div>
-              <Radio aria-hidden="true" className="text-emerald-300" size={24} />
+              <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-neutral-300">
+                <Radio aria-hidden="true" className="text-emerald-300 animate-pulse" size={14} />
+                En vivo
+              </div>
             </div>
 
             <div className="relative mt-4 h-72 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(rgba(0,229,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.08)_1px,transparent_1px),radial-gradient(circle_at_center,rgba(0,229,255,0.13),transparent_15rem)] [background-size:2.5rem_2.5rem,2.5rem_2.5rem,auto]">
-              <div className="absolute left-[14%] top-[18%] h-24 w-32 rotate-[-8deg] rounded-[45%] border border-cyan-magic/45 bg-cyan-magic/10 shadow-[0_0_28px_rgba(0,229,255,0.14)]" />
-              <div className="absolute right-[12%] top-[16%] h-28 w-36 rotate-[9deg] rounded-[42%] border border-red-400/45 bg-crimson/15 shadow-[0_0_28px_rgba(176,0,32,0.2)]" />
-              <div className="absolute bottom-[12%] left-[28%] h-24 w-48 rotate-[3deg] rounded-[48%] border border-gold-300/40 bg-gold-300/8 shadow-[0_0_28px_rgba(255,215,0,0.12)]" />
-              <div className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/80 shadow-[0_0_40px_rgba(255,255,255,0.12)]">
-                <Building2 aria-hidden="true" className="text-white" size={34} />
+              {/* City radar map background */}
+              <div className="absolute inset-0 pointer-events-none opacity-[0.14] mix-blend-overlay">
+                <Image
+                  src="/visuals/top/Panorama/Panorama (3).jpg"
+                  alt=""
+                  fill
+                  className="object-cover filter grayscale contrast-125 brightness-50"
+                />
               </div>
-              <MapPin aria-hidden="true" className="absolute left-[23%] top-[29%] text-cyan-magic drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]" size={25} />
-              <Crosshair aria-hidden="true" className="absolute right-[25%] top-[30%] text-red-300 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" size={27} />
-              <Users aria-hidden="true" className="absolute bottom-[21%] left-[44%] text-gold-300 drop-shadow-[0_0_10px_rgba(255,215,0,0.7)]" size={25} />
-              <span className="absolute bottom-3 right-3 rounded-full border border-red-400/25 bg-black/70 px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-red-300">
-                Conflicto activo
-              </span>
+
+              {/* Faction 1: Policía (left) */}
+              <button
+                onClick={() => setActiveFaction('policia')}
+                className={cn(
+                  "absolute left-[14%] top-[18%] h-24 w-32 rotate-[-8deg] rounded-[45%] border transition-all duration-300 flex items-center justify-center cursor-pointer group/node",
+                  activeFaction === 'policia'
+                    ? "border-cyan-magic bg-cyan-magic/15 shadow-[0_0_34px_rgba(0,229,255,0.25)] scale-[1.03]"
+                    : "border-cyan-magic/30 bg-cyan-magic/5 opacity-50 hover:opacity-80 hover:scale-[1.01]"
+                )}
+              >
+                <div className="absolute inset-0 rounded-[45%] bg-cyan-magic/5 animate-ping pointer-events-none" style={{ animationDuration: '3s' }} />
+                <MapPin className={cn("text-cyan-magic drop-shadow-[0_0_8px_rgba(0,229,255,0.7)] transition-transform duration-300 group-hover/node:scale-110", activeFaction !== 'policia' && "opacity-80")} size={24} />
+              </button>
+
+              {/* Faction 2: Bandas (right) */}
+              <button
+                onClick={() => setActiveFaction('bandas')}
+                className={cn(
+                  "absolute right-[12%] top-[16%] h-28 w-36 rotate-[9deg] rounded-[42%] border transition-all duration-300 flex items-center justify-center cursor-pointer group/node",
+                  activeFaction === 'bandas'
+                    ? "border-red-400 bg-crimson/20 shadow-[0_0_34px_rgba(176,0,32,0.3)] scale-[1.03]"
+                    : "border-red-400/30 bg-crimson/5 opacity-50 hover:opacity-80 hover:scale-[1.01]"
+                )}
+              >
+                <div className="absolute inset-0 rounded-[42%] bg-crimson/5 animate-ping pointer-events-none" style={{ animationDuration: '3.5s' }} />
+                <Crosshair className={cn("text-red-300 drop-shadow-[0_0_8px_rgba(248,113,113,0.7)] transition-transform duration-300 group-hover/node:scale-110", activeFaction !== 'bandas' && "opacity-80")} size={26} />
+              </button>
+
+              {/* Faction 3: Civiles (bottom) */}
+              <button
+                onClick={() => setActiveFaction('civiles')}
+                className={cn(
+                  "absolute bottom-[12%] left-[28%] h-24 w-48 rotate-[3deg] rounded-[48%] border transition-all duration-300 flex items-center justify-center cursor-pointer group/node",
+                  activeFaction === 'civiles'
+                    ? "border-gold-300 bg-gold-300/15 shadow-[0_0_34px_rgba(255,215,0,0.22)] scale-[1.03]"
+                    : "border-gold-300/25 bg-gold-300/5 opacity-50 hover:opacity-80 hover:scale-[1.01]"
+                )}
+              >
+                <div className="absolute inset-0 rounded-[48%] bg-gold-300/5 animate-ping pointer-events-none" style={{ animationDuration: '4s' }} />
+                <Users className={cn("text-gold-300 drop-shadow-[0_0_8px_rgba(255,215,0,0.6)] transition-transform duration-300 group-hover/node:scale-110", activeFaction !== 'civiles' && "opacity-80")} size={24} />
+              </button>
+
+              {/* Central Base Node */}
+              <div className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/95 shadow-[0_0_40px_rgba(255,255,255,0.12)] z-10 select-none">
+                <Building2 className="text-white opacity-90" size={28} />
+              </div>
+
+              {/* Floating Tactical HUD Info */}
+              <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/80 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Sincronizado
+                </div>
+                <div className="rounded-full border border-red-400/25 bg-black/80 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-red-300 backdrop-blur-md">
+                  Conflicto Activo
+                </div>
+              </div>
+
+              {/* HUD Details Panel inside the Map */}
+              <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-white/10 bg-black/95 p-2.5 backdrop-blur-md flex items-center justify-between text-[11px] pointer-events-none select-none">
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn("font-black uppercase tracking-wider text-xs", factionDetails[activeFaction].accent)}>
+                      {factionDetails[activeFaction].title}
+                    </span>
+                    <span className={cn("text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border bg-black/50", factionDetails[activeFaction].statusColor)}>
+                      {factionDetails[activeFaction].status}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-neutral-400 text-[9px] leading-tight truncate">
+                    <span className="text-neutral-500 font-bold">Zonas:</span> {factionDetails[activeFaction].districts}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-[9px] text-neutral-500 block uppercase font-bold tracking-wider">Control</span>
+                  <span className={cn("text-lg font-black font-fantasy", factionDetails[activeFaction].accent)}>
+                    {factionDetails[activeFaction].control}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="absolute inset-x-0 bottom-2 z-20 mx-auto flex w-fit items-center gap-2 rounded-2xl border border-white/10 bg-black/55 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl">
             {[
-              { label: "Policía", icon: Shield, tone: "text-cyan-magic" },
-              { label: "Bandas", icon: Swords, tone: "text-red-300" },
-              { label: "Civiles", icon: Users, tone: "text-gold-300" },
-            ].map(({ icon: Icon, label, tone }) => (
-              <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-[0.16em] text-neutral-200 transition hover:bg-white/5" key={label}>
-                <Icon aria-hidden="true" className={tone} size={16} />
-                {label}
-              </div>
-            ))}
+              { id: "policia", label: "Policía", icon: Shield, tone: "text-cyan-magic", activeBg: "bg-cyan-magic/10 border-cyan-magic/30 text-cyan-magic" },
+              { id: "bandas", label: "Bandas", icon: Swords, tone: "text-red-300", activeBg: "bg-crimson/15 border-red-400/30 text-red-300" },
+              { id: "civiles", label: "Civiles", icon: Users, tone: "text-gold-300", activeBg: "bg-gold-300/10 border-gold-300/20 text-gold-300" },
+            ].map(({ id, icon: Icon, label, tone, activeBg }) => {
+              const isActive = activeFaction === id;
+              return (
+                <button
+                  onClick={() => setActiveFaction(id as 'policia' | 'bandas' | 'civiles')}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-[0.16em] transition cursor-pointer border border-transparent",
+                    isActive
+                      ? activeBg
+                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                  )}
+                  key={label}
+                >
+                  <Icon aria-hidden="true" className={tone} size={16} />
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
       </div>
