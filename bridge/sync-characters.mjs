@@ -6,6 +6,13 @@
 // (tabla live_characters): faccion, rango, reputacion, wanted y contadores.
 // NO publica oro ni datos privados de la cuenta.
 //
+// IMPORTANTE — transporte: el TCP/IP de esta instancia de SQL Server rechaza el
+// handshake de pre-login (falla incluso con .NET), pero la MEMORIA COMPARTIDA
+// local funciona (igual que el juego). Como este puente corre en la MISMA
+// maquina que el SQL Server, consultamos por memoria compartida lanzando una
+// consulta local con PowerShell + System.Data.SqlClient (Server=.\TOPSERVER).
+// No se usa TCP, asi que no depende del SQL Browser ni del puerto dinamico.
+//
 // Uso:
 //   node --env-file=.env.local bridge/sync-characters.mjs --once
 //   node --env-file=.env.local bridge/sync-characters.mjs            (bucle)
@@ -13,18 +20,16 @@
 // Variables de entorno (en .env.local de la raiz del proyecto):
 //   NEXT_PUBLIC_SUPABASE_URL        (ya existe)
 //   SUPABASE_SERVICE_ROLE_KEY       (ya existe)
-//   BRIDGE_GAMEDB_HOST              host SQL Server (def. DESKTOP-ERMNM26)
-//   BRIDGE_GAMEDB_INSTANCE          instancia nombrada (def. TOPSERVER; vacio = default)
-//   BRIDGE_GAMEDB_PORT             (opcional; omitir si se usa instancia nombrada)
-//   BRIDGE_GAMEDB_DATABASE         (def. gamedb)
-//   BRIDGE_GAMEDB_USER             usuario SQL (p.ej. sa)
-//   BRIDGE_GAMEDB_PASSWORD         password SQL  <-- secreto, NO commitear
-//   BRIDGE_CHAR_INTERVAL_MS        (opcional, def. 60000)
+//   BRIDGE_GAMEDB_LOCAL_SERVER      destino local (def. .\TOPSERVER)
+//   BRIDGE_GAMEDB_DATABASE          base del juego (def. gamedb)
+//   BRIDGE_GAMEDB_USER              usuario SQL (necesita SELECT en character/guild)
+//   BRIDGE_GAMEDB_PASSWORD          password SQL  <-- secreto, NO commitear
+//   BRIDGE_CHAR_INTERVAL_MS         (opcional, def. 60000)
 // ============================================================
 
 import { pathToFileURL } from "node:url";
+import { spawn } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
-import sql from "mssql";
 
 // ---------- Config ----------
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,10 +37,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const INTERVAL_MS = Number(process.env.BRIDGE_CHAR_INTERVAL_MS || 60000);
 const ONCE = process.argv.includes("--once");
 
-const GAMEDB_HOST = process.env.BRIDGE_GAMEDB_HOST || "DESKTOP-ERMNM26";
-const GAMEDB_INSTANCE =
-  process.env.BRIDGE_GAMEDB_INSTANCE !== undefined ? process.env.BRIDGE_GAMEDB_INSTANCE : "TOPSERVER";
-const GAMEDB_PORT = process.env.BRIDGE_GAMEDB_PORT ? Number(process.env.BRIDGE_GAMEDB_PORT) : undefined;
+const LOCAL_SERVER = process.env.BRIDGE_GAMEDB_LOCAL_SERVER || ".\\TOPSERVER";
 const GAMEDB_DATABASE = process.env.BRIDGE_GAMEDB_DATABASE || "gamedb";
 const GAMEDB_USER = process.env.BRIDGE_GAMEDB_USER;
 const GAMEDB_PASSWORD = process.env.BRIDGE_GAMEDB_PASSWORD;
@@ -51,46 +53,103 @@ const FACTION_NAMES = {
 };
 
 // ============================================================
-// Lee los personajes de SQL Server (SOLO SELECT, WITH (NOLOCK)).
+// Lee los personajes por MEMORIA COMPARTIDA (PowerShell).
+// La consulta es SOLO SELECT, con WITH (NOLOCK). Devuelve las filas como JSON
+// por stdout. La contrasena se pasa al hijo por variable de entorno (no por
+// argv) para que no aparezca en la lista de procesos.
 // ============================================================
-function buildMssqlConfig() {
-  const options = { trustServerCertificate: true, encrypt: false };
-  if (GAMEDB_INSTANCE) options.instanceName = GAMEDB_INSTANCE;
-  const config = {
-    server: GAMEDB_HOST,
-    database: GAMEDB_DATABASE,
-    user: GAMEDB_USER,
-    password: GAMEDB_PASSWORD,
-    options,
-    pool: { max: 4, min: 0, idleTimeoutMillis: 30000 },
-    connectionTimeout: 15000,
-    requestTimeout: 30000,
-  };
-  if (GAMEDB_PORT) config.port = GAMEDB_PORT;
-  return config;
+const PS_SCRIPT = `
+$ErrorActionPreference = 'Stop'
+$cs = "Server=$($env:SM_SERVER);Database=$($env:SM_DB);User Id=$($env:SM_USER);Password=$($env:SM_PASS);TrustServerCertificate=True;Connect Timeout=15"
+$query = @"
+SELECT
+  c.cha_id            AS cha_id,
+  c.cha_name          AS cha_name,
+  c.faction           AS faction,
+  c.faction_rank      AS faction_rank,
+  c.reputation_points AS reputation_points,
+  c.wanted_level      AS wanted_level,
+  c.total_arrests     AS total_arrests,
+  c.total_kills       AS total_kills,
+  c.total_deaths      AS total_deaths,
+  g.guild_name        AS guild_name
+FROM dbo.[character] c WITH (NOLOCK)
+LEFT JOIN dbo.[guild] g WITH (NOLOCK) ON g.guild_id = c.guild_id
+WHERE c.cha_name IS NOT NULL AND LTRIM(RTRIM(c.cha_name)) <> ''
+"@
+$c = New-Object System.Data.SqlClient.SqlConnection $cs
+$c.Open()
+$cmd = $c.CreateCommand()
+$cmd.CommandText = $query
+$reader = $cmd.ExecuteReader()
+$rows = New-Object System.Collections.Generic.List[object]
+while ($reader.Read()) {
+  $o = [ordered]@{
+    cha_id            = $reader["cha_id"]
+    cha_name          = $reader["cha_name"]
+    faction           = $reader["faction"]
+    faction_rank      = $reader["faction_rank"]
+    reputation_points = $reader["reputation_points"]
+    wanted_level      = $reader["wanted_level"]
+    total_arrests     = $reader["total_arrests"]
+    total_kills       = $reader["total_kills"]
+    total_deaths      = $reader["total_deaths"]
+    guild_name        = if ($reader["guild_name"] -is [DBNull]) { $null } else { $reader["guild_name"] }
+  }
+  $rows.Add([pscustomobject]$o)
 }
-
-const SELECT_SQL = `
-  SELECT
-    c.cha_id            AS cha_id,
-    c.cha_name          AS cha_name,
-    c.faction           AS faction,
-    c.faction_rank      AS faction_rank,
-    c.reputation_points AS reputation_points,
-    c.wanted_level      AS wanted_level,
-    c.total_arrests     AS total_arrests,
-    c.total_kills       AS total_kills,
-    c.total_deaths      AS total_deaths,
-    g.guild_name        AS guild_name
-  FROM dbo.[character] c WITH (NOLOCK)
-  LEFT JOIN dbo.[guild] g WITH (NOLOCK) ON g.guild_id = c.guild_id
-  WHERE c.cha_name IS NOT NULL AND LTRIM(RTRIM(c.cha_name)) <> ''
+$reader.Close()
+$c.Close()
+if ($rows.Count -eq 0) {
+  [Console]::Out.Write("[]")
+} else {
+  $json = ConvertTo-Json -InputObject $rows -Depth 3 -Compress
+  if ($rows.Count -eq 1) { $json = "[$json]" }
+  [Console]::Out.Write($json)
+}
 `;
 
-async function readCharacters(pool) {
-  const result = await pool.request().query(SELECT_SQL);
+function readCharactersRaw() {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", PS_SCRIPT],
+      {
+        env: {
+          ...process.env,
+          SM_SERVER: LOCAL_SERVER,
+          SM_DB: GAMEDB_DATABASE,
+          SM_USER: GAMEDB_USER,
+          SM_PASS: GAMEDB_PASSWORD,
+        },
+        windowsHide: true,
+        maxBuffer: 64 * 1024 * 1024,
+      }
+    );
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d.toString()));
+    child.stderr.on("data", (d) => (err += d.toString()));
+    child.on("error", (e) => reject(e));
+    child.on("close", (code) => {
+      if (code !== 0) {
+        const msg = (err.trim().split(/\r?\n/)[0] || `powershell salio con codigo ${code}`).trim();
+        return reject(new Error(msg));
+      }
+      try {
+        const parsed = JSON.parse(String(out).trim() || "[]");
+        resolve(Array.isArray(parsed) ? parsed : [parsed]);
+      } catch (e) {
+        reject(new Error(`no se pudo parsear la salida de PowerShell: ${e.message}`));
+      }
+    });
+  });
+}
+
+async function readCharacters() {
+  const raw = await readCharactersRaw();
   const now = new Date().toISOString();
-  return (result.recordset || [])
+  return raw
     .filter((r) => r.cha_id != null)
     .map((r) => {
       const faction = Number(r.faction || 0);
@@ -114,8 +173,8 @@ async function readCharacters(pool) {
 // ============================================================
 // Sync a Supabase (upsert por cha_id; tolera lotes grandes).
 // ============================================================
-async function syncOnce(db, pool) {
-  const rows = await readCharacters(pool);
+async function syncOnce(db) {
+  const rows = await readCharacters();
 
   if (rows.length) {
     const CHUNK = 500;
@@ -145,24 +204,15 @@ async function main() {
     process.exit(1);
   }
 
-  const target = GAMEDB_INSTANCE ? `${GAMEDB_HOST}\\${GAMEDB_INSTANCE}` : GAMEDB_HOST;
-  console.log(`Puente de personajes · SQL Server: ${target} · db: ${GAMEDB_DATABASE}`);
+  console.log(`Puente de personajes · SQL Server (memoria compartida): ${LOCAL_SERVER} · db: ${GAMEDB_DATABASE}`);
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let pool;
-  try {
-    pool = await new sql.ConnectionPool(buildMssqlConfig()).connect();
-  } catch (err) {
-    console.error(`[sql] no se pudo conectar a SQL Server: ${err.message}`);
-    process.exit(1);
-  }
-
   const run = async () => {
     try {
-      await syncOnce(db, pool);
+      await syncOnce(db);
     } catch (err) {
       console.error(`[sync] ${err.message}`);
     }
@@ -170,16 +220,13 @@ async function main() {
 
   await run();
 
-  if (ONCE) {
-    await pool.close();
-    return;
-  }
+  if (ONCE) return;
 
   console.log(`Modo bucle: re-sincronizando cada ${Math.round(INTERVAL_MS / 1000)}s. Ctrl+C para salir.`);
   setInterval(run, INTERVAL_MS);
 }
 
-export { FACTION_NAMES, buildMssqlConfig, readCharacters };
+export { FACTION_NAMES, readCharacters };
 
 // Ejecutar el puente solo si se invoca directamente (no al importarlo en tests).
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;

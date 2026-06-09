@@ -12,7 +12,9 @@
     "bridge:ranking:watch": "node --env-file=.env.local bridge/sync-ranking.mjs",
     "bridge:ranking:test": "node bridge/_test-parse.mjs",
     "bridge:characters": "node --env-file=.env.local bridge/sync-characters.mjs --once",
-    "bridge:characters:watch": "node --env-file=.env.local bridge/sync-characters.mjs"
+    "bridge:characters:watch": "node --env-file=.env.local bridge/sync-characters.mjs",
+    "bridge:online": "node --env-file=.env.local bridge/sync-online.mjs --once",
+    "bridge:online:watch": "node --env-file=.env.local bridge/sync-online.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -20,7 +22,6 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
-    "mssql": "^12.5.5",
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",

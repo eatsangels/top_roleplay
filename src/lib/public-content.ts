@@ -362,6 +362,8 @@ const dateFormatter = new Intl.DateTimeFormat("es-ES", {
   timeZone: "UTC",
 });
 
+const numberFormatter = new Intl.NumberFormat("es-ES");
+
 const eventDateFormatter = new Intl.DateTimeFormat("es-ES", {
   weekday: "long",
   day: "2-digit",
@@ -774,7 +776,7 @@ export async function getPublicContent(): Promise<PublicContent> {
   try {
     const supabase = await createSupabaseServerClient();
     const now = new Date().toISOString();
-    const [newsResult, eventsResult, settingsResult, rankingsResult, galleryResult, pageContentResult, liveCharsResult] = await Promise.all([
+    const [newsResult, eventsResult, settingsResult, rankingsResult, galleryResult, pageContentResult, liveCharsResult, onlineStatusResult] = await Promise.all([
       supabase.from("news").select("id,title,category,summary,published_at").eq("status", "publicado").lte("published_at", now).order("published_at", { ascending: false }).limit(3),
       supabase.from("events").select("id,name,rewards,starts_at").in("status", ["activo", "destacado"]).or(`ends_at.is.null,ends_at.gte.${now}`).order("is_featured", { ascending: false }).order("starts_at", { ascending: true }).limit(4),
       supabase.from("site_settings").select("key,value").in("key", ["public_config", "public_metrics", "public_content"]),
@@ -782,6 +784,7 @@ export async function getPublicContent(): Promise<PublicContent> {
       supabase.from("gallery").select("id,title,description,image_url,category,is_featured,sort_order").eq("is_active", true).order("is_featured", { ascending: false }).order("sort_order", { ascending: true }).limit(12),
       supabase.from("public_page_content").select("*"),
       supabase.from("live_characters").select("cha_id,cha_name,faction,faction_name,faction_rank,reputation_points").order("reputation_points", { ascending: false }).limit(5),
+      supabase.from("live_server_status").select("online_count,is_online,updated_at").eq("id", 1).maybeSingle(),
     ]);
 
     const news = newsResult.error || !newsResult.data?.length
@@ -825,6 +828,18 @@ export async function getPublicContent(): Promise<PublicContent> {
       ? withRanking
       : [...withRanking.slice(0, rankingIndex + 1), { label: "Buscados", href: "/buscados" }, ...withRanking.slice(rankingIndex + 1)];
 
+    // Conteo REAL de jugadores en linea (live_server_status via puente AccountServer).
+    // Sustituye el valor de la metrica con icono "online" cuando el puente esta activo.
+    const baseMetrics = settingsResult.error ? fallbackMetrics : parseMetrics(settings.get("public_metrics"));
+    const onlineRow = onlineStatusResult.error ? null : onlineStatusResult.data;
+    const metrics = onlineRow && typeof onlineRow.online_count === "number"
+      ? baseMetrics.map((metric) =>
+          metric.icon === "online"
+            ? { ...metric, value: numberFormatter.format(Math.max(0, onlineRow.online_count)) }
+            : metric,
+        )
+      : baseMetrics;
+
     return {
       ...editorial,
       navItems,
@@ -835,7 +850,7 @@ export async function getPublicContent(): Promise<PublicContent> {
       },
       news,
       events,
-      metrics: settingsResult.error ? fallbackMetrics : parseMetrics(settings.get("public_metrics")),
+      metrics,
       config,
     };
   } catch {
