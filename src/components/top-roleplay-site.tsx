@@ -79,6 +79,56 @@ const pathRenders = [
 ];
 const eventIcons = [MapPin, Crosshair, Radio, Shield];
 
+const systemImages = [
+  "/visuals/top/Panorama/Panorama (3).jpg", // Territorios Dinámicos
+  "/visuals/top/Scenes/Scene (3).png", // Wanted y Arrestos
+  "/visuals/top/Wallpapers/Wallpapers (32).jpg", // Contrabando y Economía
+  "/visuals/top/Scenes/Scene (5).png", // Eventos Automáticos
+  "/visuals/top/Wallpapers/Wallpapers (2).png", // Progresión por Facción
+  "/visuals/top/Panorama/Panorama (5).jpg", // Roleplay y Comunidad
+];
+
+function getSystemImage(title: string, index: number): string {
+  const norm = title.toLowerCase();
+  if (norm.includes("territorio")) return "/visuals/top/Panorama/Panorama (3).jpg";
+  if (norm.includes("wanted") || norm.includes("arresto")) return "/visuals/top/Scenes/Scene (3).png";
+  if (norm.includes("contrabando") || norm.includes("econom")) return "/visuals/top/Wallpapers/Wallpapers (32).jpg";
+  if (norm.includes("evento")) return "/visuals/top/Scenes/Scene (5).png";
+  if (norm.includes("progresi") || norm.includes("facci")) return "/visuals/top/Wallpapers/Wallpapers (2).png";
+  if (norm.includes("roleplay") || norm.includes("comunid")) return "/visuals/top/Panorama/Panorama (5).jpg";
+  return systemImages[index % systemImages.length];
+}
+
+const eventImages = [
+  "/visuals/top/Wallpapers/Wallpapers (19).jpg", // Guerra Territorial
+  "/visuals/top/Wallpapers/Wallpapers (32).jpg", // Cargamento Ilegal
+  "/visuals/top/Scenes/Scene (12).jpg", // Fuga de Prisión
+  "/visuals/top/2012_Update/NWS_4.png", // Redada Policial
+];
+
+function getEventImage(title: string, index: number): string {
+  const norm = title.toLowerCase();
+  if (norm.includes("territori") || norm.includes("guerra")) return "/visuals/top/Wallpapers/Wallpapers (19).jpg";
+  if (norm.includes("cargamento") || norm.includes("contrabando") || norm.includes("ilegal")) return "/visuals/top/Wallpapers/Wallpapers (32).jpg";
+  if (norm.includes("prisi") || norm.includes("fuga") || norm.includes("carcel")) return "/visuals/top/Scenes/Scene (12).jpg";
+  if (norm.includes("redada") || norm.includes("polic")) return "/visuals/top/2012_Update/NWS_4.png";
+  return eventImages[index % eventImages.length];
+}
+
+const newsImages = [
+  "/visuals/top/Panorama/Panorama (3).jpg", // Guerra de Territorios
+  "/visuals/top/Wallpapers/Wallpapers (32).jpg", // Operación Mercado Negro
+  "/visuals/top/2012_Update/NWS_4.png", // Wanted, Arrestos y Reputación
+];
+
+function getNewsImage(title: string, index: number): string {
+  const norm = title.toLowerCase();
+  if (norm.includes("territori") || norm.includes("guerra")) return "/visuals/top/Panorama/Panorama (3).jpg";
+  if (norm.includes("mercado") || norm.includes("negro") || norm.includes("contrabando")) return "/visuals/top/Wallpapers/Wallpapers (32).jpg";
+  if (norm.includes("wanted") || norm.includes("arresto") || norm.includes("reputaci")) return "/visuals/top/2012_Update/NWS_4.png";
+  return newsImages[index % newsImages.length];
+}
+
 function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
   const reduceMotion = useReducedMotion();
 
@@ -521,14 +571,32 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
             title={content.systemsSection.title}
           />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {content.systems.map((system) => {
+            {content.systems.map((system, index) => {
               const Icon = visualIcons[system.icon];
+              const sysImg = getSystemImage(system.title, index);
               return (
               <Reveal key={system.title}>
-                <Card className="group h-full p-7 transition hover:-translate-y-2 hover:border-cyan-magic/50 hover:shadow-[0_0_42px_rgba(0,229,255,0.14)]">
-                  <Icon aria-hidden="true" className="mb-5 text-gold-300 transition group-hover:text-cyan-magic" size={34} />
-                  <h3 className="font-fantasy text-xl font-black text-white">{system.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-neutral-400">{system.description}</p>
+                <Card className="group h-full overflow-hidden flex flex-col transition hover:-translate-y-2 hover:border-cyan-magic/50 hover:shadow-[0_0_42px_rgba(0,229,255,0.14)]">
+                  <div className="relative h-40 overflow-hidden w-full">
+                    <Image
+                      src={sysImg}
+                      alt={system.title}
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                    <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                      <div className="rounded-lg border border-gold-300/35 bg-black/75 p-1.5 text-gold-300 group-hover:text-cyan-magic group-hover:border-cyan-magic/35 transition duration-300">
+                        <Icon aria-hidden="true" size={20} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-fantasy text-xl font-black text-white">{system.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-neutral-400">{system.description}</p>
+                    </div>
+                  </div>
                 </Card>
               </Reveal>
               );
@@ -649,18 +717,27 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
 
               return (
                 <Reveal key={event.id}>
-                  <Card className="group h-full overflow-hidden">
-                    <div className={cn("relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br", event.tone)}>
-                      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:2rem_2rem] opacity-40" />
+                  <Card className="group h-full overflow-hidden flex flex-col transition hover:-translate-y-1.5 hover:border-cyan-magic/30 hover:shadow-[0_0_36px_rgba(0,229,255,0.08)]">
+                    <div className="relative flex h-44 items-center justify-center overflow-hidden w-full">
+                      <Image
+                        src={getEventImage(event.title, index)}
+                        alt={event.title}
+                        fill
+                        className="object-cover opacity-60 transition duration-500 group-hover:scale-105"
+                      />
+                      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-85 mix-blend-multiply", event.tone)} />
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:2rem_2rem] opacity-30" />
                       <EventIcon aria-hidden="true" className="relative text-gold-300 drop-shadow-[0_0_18px_rgba(255,215,0,0.5)] transition duration-300 group-hover:scale-110" size={54} />
-                      <span className="absolute right-4 top-4 rounded-full border border-red-300/25 bg-black/60 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-red-200">
+                      <span className="absolute right-4 top-4 rounded-full border border-red-300/25 bg-black/70 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-red-200">
                         Operación activa
                       </span>
                     </div>
-                    <div className="p-6">
-                      <p className="text-xs font-black uppercase tracking-wider text-cyan-magic">{event.date}</p>
-                      <h3 className="mt-2 font-fantasy text-2xl font-black text-white">{event.title}</h3>
-                      <p className="mt-3 text-sm leading-6 text-neutral-400">Objetivo y recompensa: {event.reward}</p>
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-wider text-cyan-magic">{event.date}</p>
+                        <h3 className="mt-2 font-fantasy text-2xl font-black text-white">{event.title}</h3>
+                        <p className="mt-3 text-sm leading-6 text-neutral-400">Objetivo y recompensa: {event.reward}</p>
+                      </div>
                     </div>
                   </Card>
                 </Reveal>
@@ -787,20 +864,38 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
         <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8" id="noticias">
           <SectionTitle eyebrow={content.newsSection.eyebrow} text={content.newsSection.text} title={content.newsSection.title} />
           <div className="grid gap-6 md:grid-cols-3">
-            {content.news.map((item) => (
-              <Reveal key={item.id}>
-                <Card className="h-full p-7">
-                  <p className="text-xs font-black uppercase tracking-wider text-cyan-magic">
-                    {item.category} · {item.date}
-                  </p>
-                  <h3 className="mt-4 font-fantasy text-2xl font-black text-white">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-neutral-400">{item.summary}</p>
-                  <Button className="mt-5 min-h-10 px-5 py-2" href="#comunidad" variant="ghost">
-                    Leer más
-                  </Button>
-                </Card>
-              </Reveal>
-            ))}
+            {content.news.map((item, index) => {
+              const newsImg = getNewsImage(item.title, index);
+              return (
+                <Reveal key={item.id}>
+                  <Card className="group h-full overflow-hidden flex flex-col transition hover:-translate-y-1.5 hover:border-cyan-magic/30 hover:shadow-[0_0_36px_rgba(0,229,255,0.08)]">
+                    <div className="relative h-44 overflow-hidden w-full">
+                      <Image
+                        src={newsImg}
+                        alt={item.title}
+                        fill
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-wider text-cyan-magic">
+                          {item.category} · {item.date}
+                        </p>
+                        <h3 className="mt-3 font-fantasy text-2xl font-black text-white">{item.title}</h3>
+                        <p className="mt-3 text-sm leading-7 text-neutral-400">{item.summary}</p>
+                      </div>
+                      <div className="mt-5">
+                        <Button className="min-h-10 px-5 py-2" href="#comunidad" variant="ghost">
+                          Leer más
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
