@@ -745,7 +745,7 @@ export default function TopRoleplaySite({ currentUser, content }: { currentUser:
               const PathIcon = pathIcons[index % pathIcons.length];
 
               return (
-                <Reveal key={path.title}>
+                <Reveal key={path.key || path.title || index}>
                   <Card className="group relative h-full overflow-hidden p-7 transition hover:-translate-y-1 hover:border-gold-300/30 hover:shadow-[0_0_24px_rgba(255,215,0,0.06)]">
                     <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-cyan-magic/10 blur-2xl" />
                     <div className="relative z-10 flex h-full flex-col justify-between">

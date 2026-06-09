@@ -63,6 +63,7 @@ export type PublicFeature = {
 };
 
 export type PublicCharacterPath = {
+  key?: string;
   title: string;
   description: string;
 };
@@ -238,12 +239,12 @@ const fallbackEditorialContent: PublicEditorialContent = {
     text: "Conoce el mundo, completa tu introducción y decide a quién servir, ayudar o desafiar.",
   },
   paths: [
-    { title: "Policía", description: "Patrulla zonas calientes, arresta criminales, dirige redadas y protege civiles." },
-    { title: "Banda Roja", description: "Controla territorios, mueve contrabando y compite por dominar la ciudad." },
-    { title: "Banda Azul", description: "Construye reputación criminal, ataca zonas rivales y defiende tus negocios." },
-    { title: "Civil y Comerciante", description: "Trabaja, comercia, transporta y prospera sin entrar directamente en la guerra." },
-    { title: "Informante", description: "Vende información, ayuda a la Policía o negocia secretos con las bandas." },
-    { title: "Transportista", description: "Mueve mercancía legal o ilegal y decide cuánto riesgo estás dispuesto a aceptar." },
+    { key: "argent_police_force", title: "Argent Police Force", description: "Patrulla zonas calientes, investiga, arresta criminales y dirige redadas para mantener el orden." },
+    { key: "sea_shadow_syndicate", title: "Sea Shadow Syndicate", description: "Mueve contrabando por rutas ocultas y golpea desde las sombras sin dejar rastro." },
+    { key: "abyssal_reavers", title: "Abyssal Reavers", description: "Saqueadores despiadados: asalta territorios, siembra el caos y toma lo que quieras por la fuerza." },
+    { key: "crimson_tide_outlaws", title: "Crimson Tide Outlaws", description: "Forajidos sanguinarios que imponen su ley a sangre y fuego en cada esquina de la ciudad." },
+    { key: "iron_skull_brotherhood", title: "Iron Skull Brotherhood", description: "Hermandad brutal y disciplinada que conquista zonas y no perdona a quien se cruce en su camino." },
+    { key: "civil_comerciante", title: "Civil y Comerciante", description: "Trabaja, comercia, transporta y prospera sin entrar en la guerra... todavía." },
   ],
   chapters: [
     { eyebrow: "TOP ROLEPLAY · La ciudad", title: "Cada zona tiene dueño, actividad y una historia que puede cambiar hoy.", icon: "map" },
@@ -488,14 +489,14 @@ function parseFeatures(value: unknown) {
 
 function parsePaths(value: unknown) {
   if (!Array.isArray(value)) return fallbackEditorialContent.paths;
-  const paths = value.flatMap((item) => {
+  const paths = value.flatMap((item, index) => {
     if (typeof item === "string" && item.trim()) {
-      return [{ title: item.trim(), description: fallbackEditorialContent.paths[0].description }];
+      return [{ key: `path-${index}`, title: item.trim(), description: fallbackEditorialContent.paths[0].description }];
     }
     const path = objectValue(item);
     if (!path) return [];
     const title = nonEmptyString(path.title, "");
-    return title ? [{ title, description: nonEmptyString(path.description, fallbackEditorialContent.paths[0].description) }] : [];
+    return title ? [{ key: nonEmptyString(path.key, `path-${index}`), title, description: nonEmptyString(path.description, fallbackEditorialContent.paths[0].description) }] : [];
   }).slice(0, 12);
   return paths.length ? paths : fallbackEditorialContent.paths;
 }
@@ -735,7 +736,7 @@ function viewEditorialPayload(value: unknown): Record<string, unknown> | null {
     systemsSection: sectionCopy("systems"),
     systems: items("systems").map((item) => ({ title: item.title, description: item.body, icon: String(item.icon ?? "").toLowerCase().replace("bookopen", "book").replace("scrolltext", "scroll").replace("messagecircle", "message") })),
     pathsSection: sectionCopy("character_paths"),
-    paths: items("character_paths").map((item) => ({ title: item.title, description: item.body })),
+    paths: items("character_paths").map((item) => ({ key: item.key, title: item.title, description: item.body })),
     chapters: items("parallax_chapters").map((item) => ({ eyebrow: item.subtitle, title: item.title, icon: String(item.icon ?? "").toLowerCase() })),
     rankingSection: sectionCopy("ranking_public"),
     eventsSection: sectionCopy("events_public"),
