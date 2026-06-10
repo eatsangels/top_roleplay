@@ -38,7 +38,7 @@ if not exist ".env.local" (
 
 REM --- Instalar dependencias la primera vez ---
 if not exist "node_modules" (
-  echo [info] Primera ejecucion: instalando dependencias (npm install)...
+  echo [info] Primera ejecucion: instalando dependencias [npm install]...
   call npm install
   echo.
 )
@@ -65,4 +65,4 @@ echo   Para apagar todo: cierra las 4 ventanas.
 echo ============================================================
 echo.
 echo Esta ventana se puede cerrar.
-timeout /t 8 >nul
+ping 127.0.0.1 -n 9 >nul
