@@ -43,26 +43,11 @@ if not exist "node_modules" (
   echo.
 )
 
-echo Abriendo ventanas (web + 3 puentes de datos)...
+echo Iniciando todos los servicios en esta misma ventana...
+echo Abre el navegador en:  http://localhost:3000
+echo.
+echo Presiona Ctrl+C en esta ventana para apagar todos los servicios a la vez.
+echo ========================================================================
 echo.
 
-REM 1) Servidor web
-start "TOP - WEB (localhost:3000)" cmd /k "npm run dev"
-
-REM 2) Puente de jugadores online (cada 30s)
-start "TOP - Puente ONLINE" cmd /k "npm run bridge:online:watch"
-
-REM 3) Puente de personajes / buscados (cada 60s)
-start "TOP - Puente PERSONAJES" cmd /k "npm run bridge:characters:watch"
-
-REM 4) Puente de ranking (cada 60s)
-start "TOP - Puente RANKING" cmd /k "npm run bridge:ranking:watch"
-
-echo ============================================================
-echo   Listo. Se abrieron 4 ventanas.
-echo   Abre el navegador en:  http://localhost:3000
-echo   Para apagar todo: cierra las 4 ventanas.
-echo ============================================================
-echo.
-echo Esta ventana se puede cerrar.
-ping 127.0.0.1 -n 9 >nul
+call npx -y concurrently -n "WEB,ONLINE,CHARS,RANKING" -c "cyan,green,yellow,magenta" "npm run dev" "npm run bridge:online:watch" "npm run bridge:characters:watch" "npm run bridge:ranking:watch"
